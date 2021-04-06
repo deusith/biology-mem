@@ -25,7 +25,6 @@ const shuffleArray = array => {
     return array;
   }
 
-  const numberOfPairs = 3;
 const figures = shuffleArray([
   "circle",
   "square",
@@ -56,71 +55,81 @@ class Board extends Component {
           })
         });
         return shuffleArray(deck);
-      }
+    }
     
-      setupIdsArray = () => {
-        const array = [];
-        for(let i = 0; i < numberOfPairs; i++){
-          array.push({
-            pairId: nanoid(),
-            hasBeenFound: false
-          });
-        }
-        return array;
-      }
+    setupIdsArray = pairs => {
+    const array = [];
+    for(let i = 0; i < pairs; i++){
+        array.push({
+        pairId: nanoid(),
+        hasBeenFound: false
+        });
+    }
+    return array;
+    }
     
-      constructor(props){
+    constructor(props){
         super(props);
-    
-        const idsArray = this.setupIdsArray();
-    
+
+        this.finshGame = this.finishGame.bind(this);
+
+        const idsArray = this.setupIdsArray(props.numberOfPairs);
+
         this.state = {
-          cardDeckLimit : numberOfPairs  * 2,
-          cardDeck : this.setupCardDeck(idsArray),
-          idsArray,
-          discoveredPairs : 0,
-          card1 : "",
-          card2 : ""
-        }
-      }
+            cardDeckLimit : props.numberOfPairs * 2,
+            cardDeck : this.setupCardDeck(idsArray),
+            idsArray,
+            discoveredPairs : 0,
+            card1 : "",
+            card2 : ""
+        }   
+    }
+
+    finishGame(){
+        this.props.finishGame();
+    }
     
-      clickHandlder = cardKey => {
+    clickHandlder = cardKey => {
         if (!this.state.card1){
-          console.log("first card: " + cardKey)
-          this.setState({card1: cardKey})
+            this.setState({card1: cardKey})
         }
         else if(!this.state.card2){
-          console.log("second card: " + cardKey)
-          const equalCards = this.state.card1.split("$")[0] === cardKey.split("$")[0];
-          const newIdsArray = [...this.state.idsArray];
-          let newDiscoveredPairs = this.state.discoveredPairs;
-    
-          if(equalCards){
-            const pairId = cardKey.split("$")[0];
-            for(let i = 0; i < newIdsArray.length; i++){
-              if(newIdsArray[i].pairId === pairId) {
-                newIdsArray[i].hasBeenFound = true;
-                break;
-              }
+            const equalCards = this.state.card1.split("$")[0] === cardKey.split("$")[0];
+            const newIdsArray = [...this.state.idsArray];
+            let newDiscoveredPairs = this.state.discoveredPairs;
+
+            if(equalCards){
+                const pairId = cardKey.split("$")[0];
+                for(let i = 0; i < newIdsArray.length; i++){
+                    if(newIdsArray[i].pairId === pairId) {
+                    newIdsArray[i].hasBeenFound = true;
+                    break;
+                    }
+                }
+                newDiscoveredPairs += 1;
             }
-            newDiscoveredPairs += 1;
-          }
-          this.setState({
-            card1: "",
-            card2: "",
-            idsArray: newIdsArray,
-            discoveredPairs: newDiscoveredPairs
-          })
+
+            if(newDiscoveredPairs < this.state.cardDeckLimit/2){
+                this.setState({
+                    card1: "",
+                    card2: "",
+                    idsArray: newIdsArray,
+                    discoveredPairs: newDiscoveredPairs
+                })
+            }
+            else {
+                this.finishGame();
+            }
         }
-      }
+    }
     
-      voidClick = () => {}
+    voidClick = () => {}
     
-      isClickable = cardKey => {
-        const cardPairId = cardKey.split("$")[0];
-        const pairIdFound = this.state.idsArray.find(id => id.pairId === cardPairId);
-        return !pairIdFound.hasBeenFound && cardKey !== this.state.card1 ;
-      }
+    isClickable = cardKey => {
+    const cardPairId = cardKey.split("$")[0];
+    const pairIdFound = this.state.idsArray.find(id => id.pairId === cardPairId);
+    return !pairIdFound.hasBeenFound && cardKey !== this.state.card1 ;
+    }
 
     render() {
         return (
